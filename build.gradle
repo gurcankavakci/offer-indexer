@@ -1,0 +1,19 @@
+plugins {
+    id 'java'
+}
+
+group 'com.kavakci.offer'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation group: 'org.apache.solr', name: 'solr-solrj', version: '9.0.0'
+    implementation 'commons-io:commons-io:2.11.0'
+}
+
+test {
+    useJUnitPlatform()
+}
