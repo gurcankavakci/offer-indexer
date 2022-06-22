@@ -34,6 +34,11 @@ public class SolrService {
 		solr.commit();
 	}
 
+	public void deleteDocuments() throws SolrServerException, IOException {
+		solr.deleteByQuery("*");
+		solr.commit();
+	}
+
 	public void createCollection(String collection) throws SolrServerException, IOException {
 		CollectionAdminRequest.Create creator = CollectionAdminRequest.createCollection(collection, 1, 1);
 		creator.process(solr);

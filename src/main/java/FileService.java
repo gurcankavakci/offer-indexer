@@ -11,6 +11,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,16 +45,16 @@ public class FileService {
 								question = values[3];
 								isFirstLine = false;
 							}
-							text.append(values[3]).append(" ");
+							text.append(values[3]).append("\n");
 
 						}
 						inputStream.close();
 						if (usernames.size() > 0 && !StringUtils.isEmpty(question)) {
 							solrService.insertDocument(("3_" + fileName.split("\\.")[0]),
 									date,
-									usernames.stream().map(u -> u.toLowerCase()).collect(Collectors.toSet()),
-									question.toLowerCase(),
-									text.toString().toLowerCase());
+									usernames.stream().map(u -> u.toLowerCase(Locale.ENGLISH)).collect(Collectors.toSet()),
+									question.toLowerCase(Locale.ENGLISH),
+									text.toString().toLowerCase(Locale.ENGLISH));
 						}
 					} catch (FileNotFoundException | ParseException e) {
 						e.printStackTrace();
