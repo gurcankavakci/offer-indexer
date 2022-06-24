@@ -23,45 +23,68 @@ public class FileService {
 				.map(Path::getFileName)
 				.map(Path::toString)
 				.forEach(fileName -> {
-					boolean isFirstLine = true;
-					Set<String> usernames = new HashSet<>();
-					String question = null;
-					StringBuilder text = new StringBuilder();
-					Date date = null;
+					String solrId = "30_" + fileName.split("\\.")[0];
+					if(!solrService.isDocumentExist(solrId)) {
+						boolean isFirstLine = true;
+						boolean isQuestionOK = false;
+						String previousUser = null;
+						Set<String> usernames = new HashSet<>();
+						StringBuilder question = new StringBuilder();
+						StringBuilder text = new StringBuilder();
+						Date date = null;
 
-					System.out.println(fileName);
+						System.out.println(fileName);
 
-					File file = new File(Paths.get(datasetDir, fileName).toString());
+						File file = new File(Paths.get(datasetDir, fileName).toString());
 
-					try {
-						Scanner inputStream = new Scanner(file);
-						while (inputStream.hasNextLine()) {
-							String data = inputStream.nextLine();
-							String[] values = data.split("\t");
-							usernames.add(values[1]);
-							usernames.add(values[2]);
-							if (isFirstLine) {
-								date = sdf.parse(values[0]);
-								question = values[3];
-								isFirstLine = false;
+						try {
+							Scanner inputStream = new Scanner(file);
+							while (inputStream.hasNextLine()) {
+								String data = inputStream.nextLine();
+								String[] values = data.split("\t");
+								if (values.length < 4) {
+									continue;
+								}
+
+								usernames.add(values[1]);
+								usernames.add(values[2]);
+
+								if (isFirstLine) {
+									date = sdf.parse(values[0]);
+									question.append(values[3]);
+									isFirstLine = false;
+								} else if(!previousUser.equals(values[1])) {
+									text.append("\n");
+									isQuestionOK = true;
+								} else {
+									text.append(" ");
+
+									if(!isQuestionOK){
+										question.append(" ");
+										question.append(values[3]);
+									}
+								}
+								text.append(values[3]);
+								previousUser = values[1];
+
 							}
-							text.append(values[3]).append("\n");
-
+							inputStream.close();
+							if (usernames.size() > 0 && !StringUtils.isEmpty(question.toString())) {
+								solrService.insertDocument(solrId,
+										date,
+										usernames.stream().map(u -> u.toLowerCase(Locale.ENGLISH)).collect(Collectors.toSet()),
+										question.toString().toLowerCase(Locale.ENGLISH),
+										text.toString().toLowerCase(Locale.ENGLISH));
+							}
+						} catch (FileNotFoundException | ParseException e) {
+							e.printStackTrace();
+						} catch (SolrServerException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							e.printStackTrace();
 						}
-						inputStream.close();
-						if (usernames.size() > 0 && !StringUtils.isEmpty(question)) {
-							solrService.insertDocument(("3_" + fileName.split("\\.")[0]),
-									date,
-									usernames.stream().map(u -> u.toLowerCase(Locale.ENGLISH)).collect(Collectors.toSet()),
-									question.toLowerCase(Locale.ENGLISH),
-									text.toString().toLowerCase(Locale.ENGLISH));
-						}
-					} catch (FileNotFoundException | ParseException e) {
-						e.printStackTrace();
-					} catch (SolrServerException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
+					} else {
+						System.out.println(solrId + " is found skipping...");
 					}
 				});
 	}

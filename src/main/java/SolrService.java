@@ -2,6 +2,7 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.impl.XMLResponseParser;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 
 import java.io.IOException;
@@ -27,6 +28,18 @@ public class SolrService {
 		document.addField("text", text);
 		solr.add(document);
 		solr.commit();
+	}
+
+	public boolean isDocumentExist(String docId) {
+		SolrDocument byId = null;
+		try {
+			byId = solr.getById(docId);
+		} catch (SolrServerException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return byId != null;
 	}
 
 	public void deleteDocument(String docId) throws SolrServerException, IOException {
